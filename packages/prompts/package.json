@@ -1,0 +1,22 @@
+{
+  "name": "@studio/prompts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules dist"
+  },
+  "dependencies": {
+    "@studio/core": "workspace:*",
+    "@studio/ai": "workspace:*",
+    "@studio/dna": "workspace:*",
+    "zod": "^3.23.8",
+    "pino": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

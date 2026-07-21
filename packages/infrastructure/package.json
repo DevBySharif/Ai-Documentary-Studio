@@ -1,0 +1,5 @@
+{
+    "main":  "src/index.ts",
+    "name":  "@studio/infrastructure",
+    "version":  "1.0.0"
+}

@@ -1,0 +1,70 @@
+import type { MPLayer, MPProductionStage, MPCheckpointStage, MPOutputContract } from "./types.js";
+import { MPSystemLayers } from "./system-layers.js";
+import { MPAILayerManager } from "./ai-layer-manager.js";
+import { MPRenderingLayerManager } from "./rendering-layer-manager.js";
+import { MPDataFlowController } from "./data-flow-controller.js";
+import { MPEngineCommunication } from "./engine-communication.js";
+import { MPStandardDataContracts } from "./standard-data-contracts.js";
+import { MPFailureHandling } from "./failure-handling.js";
+import { MPCheckpointSystem } from "./checkpoint-system.js";
+import { MPProjectDatabase } from "./project-database.js";
+import { MPVersionControl } from "./version-control.js";
+import { MPProviderAbstraction } from "./provider-abstraction.js";
+import { MPChannelDNAArchitecture } from "./channel-dna-architecture.js";
+import { MPMultiChannelWorkspace } from "./multi-channel-workspace.js";
+import { MPSecurityManager } from "./security-manager.js";
+import { MPPerformanceTargets } from "./performance-targets.js";
+import { MPGlobalKnowledgeGraph } from "./global-knowledge-graph.js";
+import { MPAssetReuseEngine } from "./asset-reuse-engine.js";
+import { MPProductionAnalytics } from "./production-analytics.js";
+import { MPFutureExpansionFramework } from "./future-expansion-framework.js";
+import { MPOneClickDocumentary } from "./one-click-documentary.js";
+import { MPOutputContractBuilder } from "./output-contract.js";
+
+export class MPMasterProductionArchitecture {
+  readonly layers: MPSystemLayers;
+  readonly aiLayer: MPAILayerManager;
+  readonly renderingLayer: MPRenderingLayerManager;
+  readonly dataFlow: MPDataFlowController;
+  readonly communication: MPEngineCommunication;
+  readonly contracts: MPStandardDataContracts;
+  readonly failureHandling: MPFailureHandling;
+  readonly checkpoints: MPCheckpointSystem;
+  readonly database: MPProjectDatabase;
+  readonly versionControl: MPVersionControl;
+  readonly providers: MPProviderAbstraction;
+  readonly channelDNA: MPChannelDNAArchitecture;
+  readonly workspace: MPMultiChannelWorkspace;
+  readonly security: MPSecurityManager;
+  readonly performance: MPPerformanceTargets;
+  readonly knowledgeGraph: MPGlobalKnowledgeGraph;
+  readonly assetReuse: MPAssetReuseEngine;
+  readonly analytics: MPProductionAnalytics;
+  readonly expansion: MPFutureExpansionFramework;
+  readonly oneClick: MPOneClickDocumentary;
+  readonly outputContract: MPOutputContractBuilder;
+
+  constructor() {
+    this.layers = new MPSystemLayers();
+    this.aiLayer = new MPAILayerManager();
+    this.renderingLayer = new MPRenderingLayerManager();
+    this.dataFlow = new MPDataFlowController();
+    this.communication = new MPEngineCommunication();
+    this.contracts = new MPStandardDataContracts();
+    this.failureHandling = new MPFailureHandling();
+    this.checkpoints = new MPCheckpointSystem();
+    this.database = new MPProjectDatabase();
+    this.versionControl = new MPVersionControl();
+    this.providers = new MPProviderAbstraction();
+    this.channelDNA = new MPChannelDNAArchitecture();
+    this.workspace = new MPMultiChannelWorkspace("default_workspace");
+    this.security = new MPSecurityManager();
+    this.performance = new MPPerformanceTargets();
+    this.knowledgeGraph = new MPGlobalKnowledgeGraph();
+    this.assetReuse = new MPAssetReuseEngine();
+    this.analytics = new MPProductionAnalytics();
+    this.expansion = new MPFutureExpansionFramework();
+    this.oneClick = new MPOneClickDocumentary();
+    this.outputContract = new MPOutputContractBuilder();
+  }
+}

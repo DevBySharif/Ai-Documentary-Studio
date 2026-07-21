@@ -1,0 +1,35 @@
+{
+  "name": "ai-documentary-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Production-grade AI-powered documentary video creation platform",
+
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "create:module": "node tools/module-generator/index.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "latest"
+  },
+  "dependencies": {
+    "zod": "^3.23.0",
+    "pino": "^9.0.0",
+    "tsyringe": "^4.8.0",
+    "better-sqlite3": "^11.0.0",
+    "drizzle-orm": "^0.30.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

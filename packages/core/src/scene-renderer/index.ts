@@ -1,0 +1,24 @@
+export { LayerBasedRenderer } from "./layers.js";
+export { SceneCompositor } from "./compositor.js";
+export { SafeAreaManager } from "./safe-area.js";
+export { AutoFramingEngine } from "./auto-framing.js";
+export { RuleOfThirdsEngine } from "./rule-of-thirds.js";
+export { SubjectTracker } from "./subject-tracker.js";
+export { AutoCropEngine } from "./auto-crop.js";
+export { DepthMapEngine } from "./depth-map.js";
+export { SceneParallaxCompositor } from "./parallax.js";
+export { SceneLightingEngine } from "./lighting.js";
+export { SceneFocusEngine } from "./focus.js";
+export { VisualSafetyEngine } from "./visual-safety.js";
+export { FrameCompositor } from "./frame-compositor.js";
+export { CinematicCompositionAI } from "./cinematic-composition.js";
+export { MultiLayerDepthEngine } from "./multi-depth.js";
+export { SmartSceneStabilizer } from "./stabilizer.js";
+export { AdaptiveRenderProfileManager } from "./adaptive-profiles.js";
+export { SceneValidator } from "./validation.js";
+export { SceneRenderer } from "./manager.js";
+
+export type * from "./types.js";
+export type { FramingTarget } from "./auto-framing.js";
+export type { SafetyViolation } from "./visual-safety.js";
+export type { SceneValidationResult } from "./validation.js";

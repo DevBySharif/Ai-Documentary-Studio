@@ -1,0 +1,10 @@
+export * from "./types.js";
+export { AssetManager } from "./manager.js";
+export { SmartCollectionManager } from "./smart-collections.js";
+export { MetadataDatabase } from "./metadata-db.js";
+export { ImageVersionManager } from "./version-manager.js";
+export { SmartSearchEngine } from "./search-engine.js";
+export { DuplicateDetector } from "./duplicate-detector.js";
+export { AssetHealthScorer } from "./health-scorer.js";
+export { AssetRelationshipGraph } from "./relationship-graph.js";
+export { SmartAssetRecommender } from "./recommender.js";
