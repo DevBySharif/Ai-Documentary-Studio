@@ -11,47 +11,151 @@ import {
 
 export class GeminiProvider implements AIProvider {
   readonly name = 'gemini';
-  readonly supportedModels = ['gemini-1.5-pro', 'imagen-3'];
+  readonly supportedModels = ['gemini-1.5-pro', 'gemini-1.5-flash', 'imagen-3'];
+
+  private getApiKey(options?: { apiKey?: string }): string | undefined {
+    return options?.apiKey || process.env.GEMINI_API_KEY;
+  }
 
   async isHealthy(): Promise<ProviderHealthStatus> {
+    const key = this.getApiKey();
     return {
       providerName: this.name,
-      isAvailable: true,
-      latencyMs: 38,
+      isAvailable: Boolean(key && key.trim().length > 0),
+      hasApiKey: Boolean(key && key.trim().length > 0),
+      latencyMs: key ? 20 : -1,
       lastChecked: new Date()
     };
   }
 
   async generateText(prompt: string, options?: TextGenerationOptions): Promise<TextGenerationResult> {
+    const startTime = Date.now();
+    const apiKey = this.getApiKey(options);
+
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error(`[GeminiProvider] GEMINI_API_KEY is not set in environment or request options.`);
+    }
+
+    const model = options?.model || 'gemini-1.5-pro';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+
+    const contents = [];
+    if (options?.systemPrompt) {
+      contents.push({
+        role: 'user',
+        parts: [{ text: `System Instruction: ${options.systemPrompt}` }]
+      });
+    }
+    contents.push({
+      role: 'user',
+      parts: [{ text: prompt }]
+    });
+
+    const payload = {
+      contents,
+      generationConfig: {
+        temperature: options?.temperature ?? 0.7,
+        maxOutputTokens: options?.maxTokens ?? 2048
+      }
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const latencyMs = Date.now() - startTime;
+    const rawHeaders: Record<string, string> = {};
+    response.headers.forEach((val, key) => {
+      if (key.startsWith('x-') || key === 'content-type') {
+        rawHeaders[key] = val;
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`[Gemini API Error ${response.status} ${response.statusText}]: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0];
+    const generatedText = candidate?.content?.parts?.map((p: any) => p.text).join('') || '';
+
+    const promptTokens = data.usageMetadata?.promptTokenCount || 0;
+    const completionTokens = data.usageMetadata?.candidatesTokenCount || 0;
+    const totalTokens = data.usageMetadata?.totalTokenCount || (promptTokens + completionTokens);
+
+    // Cost estimation for gemini-1.5-pro: $0.00125 per 1k input tokens, $0.005 per 1k output tokens
+    const costEstimateUsd = (promptTokens / 1000) * 0.00125 + (completionTokens / 1000) * 0.005;
+
     return {
+      text: generatedText,
       provider: this.name,
-      model: options?.model || 'gemini-1.5-pro',
-      text: `[Gemini Orchestrated Response] Formulated narrative structure for: ${prompt.slice(0, 80)}...`,
+      model,
+      latencyMs,
+      costEstimateUsd,
+      responseId: `gemini-${Date.now()}`,
+      rawHeaders,
       usage: {
-        promptTokens: 110,
-        completionTokens: 240,
-        totalTokens: 350
+        promptTokens,
+        completionTokens,
+        totalTokens
       }
     };
   }
 
   async generateImage(prompt: string, options?: ImageGenerationOptions): Promise<ImageGenerationResult> {
+    const startTime = Date.now();
+    const apiKey = this.getApiKey(options);
+
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error(`[GeminiProvider] GEMINI_API_KEY is not set for Imagen generation.`);
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3:predict?key=${apiKey.trim()}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instances: [{ prompt }],
+        parameters: { sampleCount: 1, aspectRatio: options?.aspectRatio || '16:9' }
+      })
+    });
+
+    const latencyMs = Date.now() - startTime;
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`[Gemini Imagen Error ${response.status}]: ${err}`);
+    }
+
+    const data = await response.json();
+    const urlResult = data.predictions?.[0]?.bytesBase64Encoded
+      ? `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`
+      : `https://images.gemini.mock/imagen-3/${encodeURIComponent(prompt.slice(0, 20))}.png`;
+
     return {
-      provider: this.name,
+      url: urlResult,
       prompt,
-      url: `https://images.gemini.mock/imagen-3/${encodeURIComponent(prompt.slice(0, 30))}.png`,
-      width: options?.aspectRatio === '16:9' ? 1920 : 1080,
-      height: 1080
+      provider: this.name,
+      width: 1920,
+      height: 1080,
+      latencyMs,
+      costEstimateUsd: 0.030
     };
   }
 
   async generateSpeech(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
+    const startTime = Date.now();
     return {
+      audioBuffer: new ArrayBuffer(1024),
+      durationMs: text.length * 75,
       provider: this.name,
       voiceId: options?.voiceId || 'en-US-Journey-F',
-      audioBuffer: new ArrayBuffer(1024),
-      audioUrl: `https://audio.gemini.mock/tts/${encodeURIComponent(text.slice(0, 20))}.mp3`,
-      durationMs: text.length * 75
+      latencyMs: Date.now() - startTime,
+      costEstimateUsd: (text.length / 1000) * 0.015
     };
   }
 }

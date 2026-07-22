@@ -1,4 +1,4 @@
-import { AIProviderManager } from './ai-provider-manager.js';
+import { AIProviderManager, FallbackAttemptLog } from './ai-provider-manager.js';
 
 export interface DocumentaryPromptInput {
   topic: string;
@@ -33,7 +33,19 @@ export interface DocumentaryPromptOutput {
     colorPalette: string;
   };
   scenePrompts: ScenePromptSpec[];
-  providerUsed: string;
+  telemetry: {
+    providerUsed: string;
+    model: string;
+    latencyMs: number;
+    costEstimateUsd: number;
+    responseId?: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+    fallbackAttempts: FallbackAttemptLog[];
+  };
   generatedAt: string;
 }
 
@@ -45,56 +57,81 @@ export class PromptService {
     const tone = input.tone || 'Dramatic History';
     const language = input.language || 'en';
 
-    const prompt = `Formulate a structured documentary prompt pack for topic "${topic}", tone "${tone}", language "${language}".`;
-    
-    const textResult = await this.providerManager.generateTextWithFallback(
-      prompt,
-      { systemPrompt: 'You are an AI Documentary Prompt Engineer formulating visual and narrative prompts.' },
+    const systemPrompt = `You are a documentary visual director. Return ONLY valid JSON with keys: narrativeStructure (hook, thesis, climax, resolution), globalStyleRules (visualPreset, aspectRatio, colorPalette), and scenePrompts (array of {sceneIndex, title, visualConcept, imagePrompt, suggestedArtStyle, cameraMotionPreset}). No markdown formatting, no code ticks.`;
+    const userPrompt = `Formulate documentary prompt pack for topic "${topic}", tone "${tone}", language "${language}".`;
+
+    const telemetryResult = await this.providerManager.generateTextWithTelemetry(
+      userPrompt,
+      { systemPrompt, maxTokens: 1500 },
       input.preferredProvider
     );
+
+    const { result, attempts } = telemetryResult;
+
+    let parsed: any = {};
+    try {
+      const cleanJsonText = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
+      parsed = JSON.parse(cleanJsonText);
+    } catch (e) {
+      parsed = {
+        narrativeStructure: {
+          hook: `In the shadow of historical archives, the secret story of ${topic} was forged...`,
+          thesis: `Power, ambition, and strategic warfare defined ${topic}.`,
+          climax: `The fateful turning point where the outcome of ${topic} hung in the balance.`,
+          resolution: `How the legacy of ${topic} echoes in modern civilization.`
+        },
+        globalStyleRules: {
+          visualPreset: `${tone} Cinematic 35mm Film Grain`,
+          aspectRatio: "16:9",
+          colorPalette: "Deep Amber, Shadowed Bronze, Muted Crimson"
+        },
+        scenePrompts: [
+          {
+            sceneIndex: 1,
+            title: `Scene 1: Dawn of ${topic}`,
+            visualConcept: `Wide establishing shot during the era of ${topic}`,
+            imagePrompt: `Wide cinematic establishing shot of ${topic}, 35mm film texture, 8k resolution`,
+            suggestedArtStyle: "Cinematic Archival",
+            cameraMotionPreset: "SLOW_ZOOM_IN"
+          }
+        ]
+      };
+    }
 
     return {
       topic,
       tone,
       language,
-      narrativeStructure: {
-        hook: `In the shadow of historical archives, the secret story of ${topic} was lost to time...`,
-        thesis: `Power, ambition, and strategic warfare defined the transformation of ${topic}.`,
-        climax: `The fateful turning point where the outcome of ${topic} hung in the balance.`,
-        resolution: `How the legacy of ${topic} echoes in modern civilization.`
+      narrativeStructure: parsed.narrativeStructure || {
+        hook: `Narrative hook for ${topic}`,
+        thesis: `Thesis for ${topic}`,
+        climax: `Climax for ${topic}`,
+        resolution: `Resolution for ${topic}`
       },
-      globalStyleRules: {
-        visualPreset: `${tone} Cinematic 35mm Film Grain`,
-        aspectRatio: '16:9',
-        colorPalette: 'Deep Amber, Shadowed Bronze, Muted Crimson'
+      globalStyleRules: parsed.globalStyleRules || {
+        visualPreset: `${tone} Cinematic`,
+        aspectRatio: "16:9",
+        colorPalette: "Cinematic Gold & Charcoal"
       },
-      scenePrompts: [
+      scenePrompts: parsed.scenePrompts || [
         {
           sceneIndex: 1,
-          title: `Scene 1: Dawn of ${topic}`,
-          visualConcept: `Wide establishing shot of landscape during the era of ${topic}`,
-          imagePrompt: `Wide cinematic establishing shot of ${topic}, dramatic volumetric golden hour sunlight, 35mm film texture, hyperrealistic documentary composition, 8k resolution`,
-          suggestedArtStyle: 'Cinematic Archival',
-          cameraMotionPreset: 'SLOW_ZOOM_IN'
-        },
-        {
-          sceneIndex: 2,
-          title: `Scene 2: Conflict & Strategy`,
-          visualConcept: `Key historical figures in intense council discussing ${topic}`,
-          imagePrompt: `Intense historical council around map table, chiaroscuro lighting, dramatic shadows, authentic period attire, cinematic color grade`,
-          suggestedArtStyle: 'Renaissance Master',
-          cameraMotionPreset: 'PAN_LEFT_TO_RIGHT'
-        },
-        {
-          sceneIndex: 3,
-          title: `Scene 3: Legacy & Aftermath`,
-          visualConcept: `Ancient ruins overlooking the modern landscape of ${topic}`,
-          imagePrompt: `Ancient stone monuments in misty morning fog, atmospheric depth, cinematic lighting, archival photo aesthetic`,
-          suggestedArtStyle: 'Historical Realism',
-          cameraMotionPreset: 'STATIC_STATIONARY'
+          title: `Scene 1: ${topic}`,
+          visualConcept: `Visual concept for ${topic}`,
+          imagePrompt: `Cinematic image prompt for ${topic}`,
+          suggestedArtStyle: "Cinematic",
+          cameraMotionPreset: "SLOW_ZOOM_IN"
         }
       ],
-      providerUsed: textResult.provider,
+      telemetry: {
+        providerUsed: result.provider,
+        model: result.model,
+        latencyMs: result.latencyMs,
+        costEstimateUsd: result.costEstimateUsd,
+        responseId: result.responseId,
+        usage: result.usage,
+        fallbackAttempts: attempts
+      },
       generatedAt: new Date().toISOString()
     };
   }

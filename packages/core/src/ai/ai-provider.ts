@@ -3,12 +3,17 @@ export interface TextGenerationOptions {
   temperature?: number;
   maxTokens?: number;
   systemPrompt?: string;
+  apiKey?: string;
 }
 
 export interface TextGenerationResult {
   text: string;
   provider: string;
   model: string;
+  latencyMs: number;
+  costEstimateUsd: number;
+  responseId?: string;
+  rawHeaders?: Record<string, string>;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -20,6 +25,7 @@ export interface ImageGenerationOptions {
   aspectRatio?: '1:1' | '16:9' | '9:16' | '4:3';
   resolution?: '1080p' | '4K' | '720p';
   style?: string;
+  apiKey?: string;
 }
 
 export interface ImageGenerationResult {
@@ -28,6 +34,8 @@ export interface ImageGenerationResult {
   provider: string;
   width: number;
   height: number;
+  latencyMs: number;
+  costEstimateUsd: number;
 }
 
 export interface SpeechGenerationOptions {
@@ -35,6 +43,7 @@ export interface SpeechGenerationOptions {
   stability?: number;
   clarity?: number;
   speed?: number;
+  apiKey?: string;
 }
 
 export interface SpeechGenerationResult {
@@ -43,11 +52,14 @@ export interface SpeechGenerationResult {
   durationMs: number;
   provider: string;
   voiceId: string;
+  latencyMs: number;
+  costEstimateUsd: number;
 }
 
 export interface ProviderHealthStatus {
   providerName: string;
   isAvailable: boolean;
+  hasApiKey: boolean;
   latencyMs: number;
   lastChecked: Date;
 }

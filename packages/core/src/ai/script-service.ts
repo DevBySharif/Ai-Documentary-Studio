@@ -1,4 +1,4 @@
-import { AIProviderManager } from './ai-provider-manager.js';
+import { AIProviderManager, FallbackAttemptLog } from './ai-provider-manager.js';
 import { DocumentaryPromptOutput } from './prompt-service.js';
 
 export interface ScriptNarrationCue {
@@ -61,8 +61,20 @@ export interface DocumentaryScriptDocument {
   scenes: ScriptSceneDocument[];
   timelineMarkers: ScriptTimelineMarker[];
   subtitleCues: ScriptSubtitleCue[];
-  metadata: {
+  telemetry: {
     providerUsed: string;
+    model: string;
+    latencyMs: number;
+    costEstimateUsd: number;
+    responseId?: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+    fallbackAttempts: FallbackAttemptLog[];
+  };
+  metadata: {
     generatedAt: string;
     version: number;
   };
@@ -72,12 +84,16 @@ export class ScriptService {
   constructor(private readonly providerManager: AIProviderManager) {}
 
   public async generateScript(promptPack: DocumentaryPromptOutput): Promise<DocumentaryScriptDocument> {
-    const promptText = `Generate full documentary script document for topic "${promptPack.topic}" based on narrative hook "${promptPack.narrativeStructure.hook}".`;
-    
-    const textResult = await this.providerManager.generateTextWithFallback(
-      promptText,
-      { systemPrompt: 'You are a master AI Documentary Scriptwriter formulating structured video narrative documents.' }
+    const userPrompt = `Formulate complete documentary narration text and scene structure for topic "${promptPack.topic}". Hook: "${promptPack.narrativeStructure.hook}".`;
+    const systemPrompt = `You are a documentary lead writer. Return valid JSON narration script.`;
+
+    const telemetryResult = await this.providerManager.generateTextWithTelemetry(
+      userPrompt,
+      { systemPrompt, maxTokens: 2000 },
+      promptPack.telemetry?.providerUsed
     );
+
+    const { result, attempts } = telemetryResult;
 
     const scriptId = `script-${Date.now()}`;
     const scenes: ScriptSceneDocument[] = promptPack.scenePrompts.map((sp, idx) => {
@@ -150,8 +166,16 @@ export class ScriptService {
       scenes,
       timelineMarkers,
       subtitleCues,
+      telemetry: {
+        providerUsed: result.provider,
+        model: result.model,
+        latencyMs: result.latencyMs,
+        costEstimateUsd: result.costEstimateUsd,
+        responseId: result.responseId,
+        usage: result.usage,
+        fallbackAttempts: attempts
+      },
       metadata: {
-        providerUsed: textResult.provider,
         generatedAt: new Date().toISOString(),
         version: 1
       }

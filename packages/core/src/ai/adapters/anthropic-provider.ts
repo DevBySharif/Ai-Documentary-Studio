@@ -11,47 +11,113 @@ import {
 
 export class AnthropicProvider implements AIProvider {
   readonly name = 'anthropic';
-  readonly supportedModels = ['claude-3-5-sonnet', 'claude-3-haiku'];
+  readonly supportedModels = ['claude-3-5-sonnet-20240620', 'claude-3-haiku-20240307'];
+
+  private getApiKey(options?: { apiKey?: string }): string | undefined {
+    return options?.apiKey || process.env.ANTHROPIC_API_KEY;
+  }
 
   async isHealthy(): Promise<ProviderHealthStatus> {
+    const key = this.getApiKey();
     return {
       providerName: this.name,
-      isAvailable: true,
-      latencyMs: 50,
+      isAvailable: Boolean(key && key.trim().length > 0),
+      hasApiKey: Boolean(key && key.trim().length > 0),
+      latencyMs: key ? 30 : -1,
       lastChecked: new Date()
     };
   }
 
   async generateText(prompt: string, options?: TextGenerationOptions): Promise<TextGenerationResult> {
+    const startTime = Date.now();
+    const apiKey = this.getApiKey(options);
+
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error(`[AnthropicProvider] ANTHROPIC_API_KEY is not set in environment or request options.`);
+    }
+
+    const model = options?.model || 'claude-3-5-sonnet-20240620';
+
+    const payload: Record<string, any> = {
+      model,
+      max_tokens: options?.maxTokens ?? 2048,
+      messages: [{ role: 'user', content: prompt }]
+    };
+
+    if (options?.systemPrompt) {
+      payload.system = options.systemPrompt;
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey.trim(),
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const latencyMs = Date.now() - startTime;
+    const rawHeaders: Record<string, string> = {};
+    response.headers.forEach((val, key) => {
+      if (key.startsWith('anthropic-') || key.startsWith('x-') || key === 'content-type') {
+        rawHeaders[key] = val;
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`[Anthropic API Error ${response.status} ${response.statusText}]: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.content?.[0]?.text || '';
+    const promptTokens = data.usage?.input_tokens || 0;
+    const completionTokens = data.usage?.output_tokens || 0;
+    const totalTokens = promptTokens + completionTokens;
+
+    // Cost estimation for Claude 3.5 Sonnet: $0.003 per 1k input tokens, $0.015 per 1k output tokens
+    const costEstimateUsd = (promptTokens / 1000) * 0.003 + (completionTokens / 1000) * 0.015;
+
     return {
+      text: generatedText,
       provider: this.name,
-      model: options?.model || 'claude-3-5-sonnet',
-      text: `[Anthropic Orchestrated Response] Formulated cinematic narrative breakdown for: ${prompt.slice(0, 80)}...`,
+      model,
+      latencyMs,
+      costEstimateUsd,
+      responseId: data.id || `msg-${Date.now()}`,
+      rawHeaders,
       usage: {
-        promptTokens: 130,
-        completionTokens: 260,
-        totalTokens: 390
+        promptTokens,
+        completionTokens,
+        totalTokens
       }
     };
   }
 
   async generateImage(prompt: string, options?: ImageGenerationOptions): Promise<ImageGenerationResult> {
+    const startTime = Date.now();
     return {
-      provider: this.name,
+      url: `https://images.anthropic.mock/claude/${encodeURIComponent(prompt.slice(0, 20))}.png`,
       prompt,
-      url: `https://images.anthropic.mock/claude/${encodeURIComponent(prompt.slice(0, 30))}.png`,
-      width: options?.aspectRatio === '16:9' ? 1920 : 1080,
-      height: 1080
+      provider: this.name,
+      width: 1920,
+      height: 1080,
+      latencyMs: Date.now() - startTime,
+      costEstimateUsd: 0.035
     };
   }
 
   async generateSpeech(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
+    const startTime = Date.now();
     return {
+      audioBuffer: new ArrayBuffer(1024),
+      durationMs: text.length * 85,
       provider: this.name,
       voiceId: options?.voiceId || 'claude-voice-en',
-      audioBuffer: new ArrayBuffer(1024),
-      audioUrl: `https://audio.anthropic.mock/tts/${encodeURIComponent(text.slice(0, 20))}.mp3`,
-      durationMs: text.length * 85
+      latencyMs: Date.now() - startTime,
+      costEstimateUsd: (text.length / 1000) * 0.020
     };
   }
 }
