@@ -191,6 +191,8 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  packages/application: {}
+
   packages/assets:
     dependencies:
       '@studio/core':
@@ -262,6 +264,10 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
+
+  packages/domain: {}
+
+  packages/infrastructure: {}
 
   packages/lifecycle:
     dependencies:
@@ -347,6 +353,8 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
+
+  packages/plugins: {}
 
   packages/prompts:
     dependencies:

@@ -45,9 +45,10 @@ export const timelineActions = {
   undo() {
     timelineStore.setState((draft) => {
       const past = draft.history.past;
-      if (past.length === 0) return draft; // Nothing to undo
+      if (past.length === 0) return draft;
       
       const previous = past[past.length - 1];
+      if (!previous) return draft;
       const newPast = past.slice(0, past.length - 1);
       
       return {
@@ -63,9 +64,10 @@ export const timelineActions = {
   redo() {
     timelineStore.setState((draft) => {
       const future = draft.history.future;
-      if (future.length === 0) return draft; // Nothing to redo
+      if (future.length === 0) return draft;
       
       const next = future[0];
+      if (!next) return draft;
       const newFuture = future.slice(1);
       
       return {
