@@ -83,3 +83,5 @@ export { ProjectStateMachine } from "./state/machine.js";
 export { Logger } from "./logger/index.js";
 export { DecisionPipeline } from "./pipeline/index.js";
 export * from "./ddd/index.js";
+export * from "./ai/index.js";
+
