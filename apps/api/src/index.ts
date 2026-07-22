@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -22,4 +23,9 @@ app.get("/api/health", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);
+  console.log("[ENV CHECK]", {
+    OPENAI: !!process.env.OPENAI_API_KEY,
+    GEMINI: !!process.env.GEMINI_API_KEY,
+    ANTHROPIC: !!process.env.ANTHROPIC_API_KEY,
+  });
 });

@@ -132,12 +132,13 @@ export class GeminiProvider implements AIProvider {
     }
 
     const data = await response.json();
-    const urlResult = data.predictions?.[0]?.bytesBase64Encoded
-      ? `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`
-      : `https://images.gemini.mock/imagen-3/${encodeURIComponent(prompt.slice(0, 20))}.png`;
+
+    if (!data.predictions?.[0]?.bytesBase64Encoded) {
+      throw new Error(`[GeminiProvider] Imagen API returned no image data. Raw response: ${JSON.stringify(data)}`);
+    }
 
     return {
-      url: urlResult,
+      url: `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`,
       prompt,
       provider: this.name,
       width: 1920,
@@ -147,15 +148,9 @@ export class GeminiProvider implements AIProvider {
     };
   }
 
-  async generateSpeech(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
-    const startTime = Date.now();
-    return {
-      audioBuffer: new ArrayBuffer(1024),
-      durationMs: text.length * 75,
-      provider: this.name,
-      voiceId: options?.voiceId || 'en-US-Journey-F',
-      latencyMs: Date.now() - startTime,
-      costEstimateUsd: (text.length / 1000) * 0.015
-    };
+  async generateSpeech(_text: string, _options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
+    throw new Error(
+      '[GeminiProvider] generateSpeech() is NOT IMPLEMENTED. Google Cloud Text-to-Speech requires a separate API integration (NOT in Sprint 3 scope).'
+    );
   }
 }

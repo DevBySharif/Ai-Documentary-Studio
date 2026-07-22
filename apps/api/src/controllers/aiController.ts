@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AIProviderManager, PromptService, ScriptService } from '@studio/core';
+import { AIProviderManager, AllProvidersFailedError, PromptService, ScriptService } from '@studio/core';
 
 const providerManager = new AIProviderManager();
 const promptService = new PromptService(providerManager);
@@ -24,6 +24,13 @@ export const aiController = {
 
       return res.status(200).json({ success: true, data: promptPack });
     } catch (error: any) {
+      if (error instanceof AllProvidersFailedError) {
+        return res.status(503).json({
+          success: false,
+          error: 'All AI providers failed. No prompt pack was generated.',
+          providerFailures: error.providerFailures
+        });
+      }
       return res.status(500).json({ success: false, error: error.message || 'Internal Server Error' });
     }
   },
@@ -50,6 +57,13 @@ export const aiController = {
 
       return res.status(200).json({ success: true, data: scriptDocument });
     } catch (error: any) {
+      if (error instanceof AllProvidersFailedError) {
+        return res.status(503).json({
+          success: false,
+          error: 'All AI providers failed. No script was generated.',
+          providerFailures: error.providerFailures
+        });
+      }
       return res.status(500).json({ success: false, error: error.message || 'Internal Server Error' });
     }
   }

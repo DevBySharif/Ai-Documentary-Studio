@@ -23,6 +23,21 @@ export interface FallbackExecutionTelemetry {
   fallbackChain: string[];
 }
 
+/**
+ * Thrown when every provider in the fallback chain has failed.
+ * Controllers must catch this and respond with HTTP 503.
+ * No fabricated data is ever returned.
+ */
+export class AllProvidersFailedError extends Error {
+  readonly providerFailures: FallbackAttemptLog[];
+
+  constructor(failures: FallbackAttemptLog[]) {
+    super(`All AI providers failed. ${failures.length} attempt(s) made.`);
+    this.name = 'AllProvidersFailedError';
+    this.providerFailures = failures;
+  }
+}
+
 export class AIProviderManager {
   private providers: Map<string, AIProvider> = new Map();
   private defaultProviderName: string;
@@ -113,46 +128,9 @@ export class AIProviderManager {
       }
     }
 
-    // Resilient Fallback when no keys configured in environment: return diagnostic payload
-    const mockFallbackResult: TextGenerationResult = {
-      text: JSON.stringify({
-        topic: prompt.slice(0, 40),
-        narrativeStructure: {
-          hook: `Dynamic generated narrative hook for ${prompt.slice(0, 30)}`,
-          thesis: `Dynamic thesis statement`,
-          climax: `Dynamic climax turning point`,
-          resolution: `Dynamic historical resolution`
-        },
-        globalStyleRules: {
-          visualPreset: "Cinematic 35mm Archival",
-          aspectRatio: "16:9",
-          colorPalette: "Sepia & Obsidian"
-        },
-        scenePrompts: [
-          {
-            sceneIndex: 1,
-            title: "Scene 1: Dynamic Beginning",
-            visualConcept: "Establishing shot",
-            imagePrompt: "Wide establishing shot 35mm film",
-            suggestedArtStyle: "Cinematic",
-            cameraMotionPreset: "SLOW_ZOOM_IN"
-          }
-        ]
-      }),
-      provider: "fallback-orchestrator",
-      model: "resilient-fallback-v1",
-      latencyMs: 15,
-      costEstimateUsd: 0,
-      responseId: `fallback-${Date.now()}`,
-      rawHeaders: { "x-fallback-reason": "No active API keys configured in .env" },
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
-    };
-
-    return {
-      result: mockFallbackResult,
-      attempts: attemptsLog,
-      fallbackChain: chain
-    };
+    // Every provider in the fallback chain has failed.
+    // Throw — never fabricate data.
+    throw new AllProvidersFailedError(attemptsLog);
   }
 
   public async generateTextWithFallback(

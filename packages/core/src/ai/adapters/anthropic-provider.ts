@@ -96,28 +96,15 @@ export class AnthropicProvider implements AIProvider {
     };
   }
 
-  async generateImage(prompt: string, options?: ImageGenerationOptions): Promise<ImageGenerationResult> {
-    const startTime = Date.now();
-    return {
-      url: `https://images.anthropic.mock/claude/${encodeURIComponent(prompt.slice(0, 20))}.png`,
-      prompt,
-      provider: this.name,
-      width: 1920,
-      height: 1080,
-      latencyMs: Date.now() - startTime,
-      costEstimateUsd: 0.035
-    };
+  async generateImage(_prompt: string, _options?: ImageGenerationOptions): Promise<ImageGenerationResult> {
+    throw new Error(
+      '[AnthropicProvider] generateImage() is NOT IMPLEMENTED. Anthropic does not provide an image generation API (NOT in Sprint 3 scope).'
+    );
   }
 
-  async generateSpeech(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
-    const startTime = Date.now();
-    return {
-      audioBuffer: new ArrayBuffer(1024),
-      durationMs: text.length * 85,
-      provider: this.name,
-      voiceId: options?.voiceId || 'claude-voice-en',
-      latencyMs: Date.now() - startTime,
-      costEstimateUsd: (text.length / 1000) * 0.020
-    };
+  async generateSpeech(_text: string, _options?: SpeechGenerationOptions): Promise<SpeechGenerationResult> {
+    throw new Error(
+      '[AnthropicProvider] generateSpeech() is NOT IMPLEMENTED. Anthropic does not provide a speech synthesis API (NOT in Sprint 3 scope).'
+    );
   }
 }
