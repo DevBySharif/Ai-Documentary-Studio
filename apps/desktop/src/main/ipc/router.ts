@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { IpcChannels, IpcRequest, IpcResponse, PingRequest, PingResponse } from '@studio/shared';
-import { PermissionGateway } from '../core/PermissionGateway';
+import { PermissionGateway } from '../core/PermissionGateway.js';
 import { z } from 'zod';
 
 export function registerIpcHandlers() {

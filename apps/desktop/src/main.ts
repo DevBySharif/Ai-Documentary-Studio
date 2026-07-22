@@ -1,9 +1,13 @@
 import 'reflect-metadata'; // Required for tsyringe
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { ServiceRegistry } from './main/core/ServiceRegistry';
-import { HealthMonitor } from './main/core/HealthMonitor';
-import { registerIpcHandlers } from './main/ipc/router';
+import { fileURLToPath } from 'url';
+import { ServiceRegistry } from './main/core/ServiceRegistry.js';
+import { HealthMonitor } from './main/core/HealthMonitor.js';
+import { registerIpcHandlers } from './main/ipc/router.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
 const healthMonitor = new HealthMonitor();
@@ -29,7 +33,8 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../index.html'));
+    const indexPath = path.resolve(__dirname, '../../../index.html');
+    mainWindow.loadFile(indexPath);
   }
 }
 

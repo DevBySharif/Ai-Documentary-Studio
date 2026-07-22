@@ -12,8 +12,8 @@ export const PROJECT_STATUSES = [
   "complete",
 ] as const;
 
-export * from './ipc/types';
-export * from './ipc/channels';
+export * from './ipc/types.js';
+export * from './ipc/channels.js';
 
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
