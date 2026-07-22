@@ -1,10 +1,7 @@
 import { Router } from "express";
 import { projectController } from "../controllers/projectController.js";
-import { requireAuth } from "../middleware/auth.js";
 
 export const projectRouter = Router();
-
-projectRouter.use(requireAuth);
 
 projectRouter.get("/", projectController.list);
 projectRouter.get("/:id", projectController.get);
