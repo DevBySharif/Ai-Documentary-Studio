@@ -29,9 +29,10 @@ function createWindow() {
     }
   });
 
+  mainWindow.webContents.openDevTools();
+
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
   } else {
     const indexPath = path.resolve(__dirname, '../../../index.html');
     mainWindow.loadFile(indexPath);
