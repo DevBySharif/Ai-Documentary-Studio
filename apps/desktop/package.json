@@ -4,10 +4,19 @@
   "description": "AI Documentary Studio Desktop Application",
   "author": "DevBySharif",
   "private": true,
-  "main": "dist/main.js",
+  "main": "dist/apps/desktop/src/main.js",
+  "build": {
+    "appId": "com.aidocumentarystudio.desktop",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*"
+    ]
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit false --outDir dist && vite build && electron-builder --dir",
+    "build": "tsc --noEmit false --outDir dist && vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
