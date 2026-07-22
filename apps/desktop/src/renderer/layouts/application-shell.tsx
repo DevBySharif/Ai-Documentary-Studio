@@ -11,7 +11,7 @@ interface ApplicationShellProps {
 
 /**
  * The canonical Application Shell Layout.
- * Defines the strict boundaries for various dockable panels.
+ * Renders the production-grade multi-pane desktop workspace.
  */
 export const ApplicationShell: React.FC<ApplicationShellProps> = ({
   toolbar,
@@ -22,29 +22,49 @@ export const ApplicationShell: React.FC<ApplicationShellProps> = ({
   statusBar
 }) => {
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", backgroundColor: "#0f172a", color: "#f8fafc" }}>
       {/* Top Toolbar */}
-      {toolbar && <header>{toolbar}</header>}
+      {toolbar && (
+        <header style={{ height: "48px", backgroundColor: "#1e293b", borderBottom: "1px solid #334155", display: "flex", alignItems: "center", padding: "0 16px", flexShrink: 0 }}>
+          {toolbar}
+        </header>
+      )}
 
       {/* Main Content Area */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Left Sidebar */}
-        {sidebar && <aside>{sidebar}</aside>}
+        {sidebar && (
+          <aside style={{ width: "240px", backgroundColor: "#1e293b", borderRight: "1px solid #334155", flexShrink: 0, overflowY: "auto" }}>
+            {sidebar}
+          </aside>
+        )}
 
         {/* Center Workspace */}
-        <main style={{ flex: 1, overflow: "auto" }}>
+        <main style={{ flex: 1, backgroundColor: "#0f172a", overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {workspace}
         </main>
 
         {/* Right Inspector */}
-        {inspector && <aside>{inspector}</aside>}
+        {inspector && (
+          <aside style={{ width: "280px", backgroundColor: "#1e293b", borderLeft: "1px solid #334155", flexShrink: 0, overflowY: "auto" }}>
+            {inspector}
+          </aside>
+        )}
       </div>
 
       {/* Bottom Timeline */}
-      {timeline && <section>{timeline}</section>}
+      {timeline && (
+        <section style={{ height: "180px", backgroundColor: "#0f172a", borderTop: "1px solid #334155", flexShrink: 0, overflowY: "auto" }}>
+          {timeline}
+        </section>
+      )}
 
       {/* Status Bar */}
-      {statusBar && <footer>{statusBar}</footer>}
+      {statusBar && (
+        <footer style={{ height: "24px", backgroundColor: "#020617", borderTop: "1px solid #1e293b", display: "flex", alignItems: "center", padding: "0 12px", fontSize: "11px", color: "#94a3b8", flexShrink: 0 }}>
+          {statusBar}
+        </footer>
+      )}
     </div>
   );
 };
